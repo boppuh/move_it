@@ -45,6 +45,7 @@ export function SearchBar() {
         return;
       }
 
+      setIsLoading(false);
       startTransition(() => {
         router.push(`/compare/${data.slug}`);
       });
