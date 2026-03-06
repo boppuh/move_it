@@ -18,7 +18,8 @@ export async function POST(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  await supabase.rpc('increment_share_count', { comparison_id: data.id });
+  const { error: rpcErr } = await supabase.rpc('increment_share_count', { comparison_id: data.id });
+  if (rpcErr) console.error('[share_count]', rpcErr);
 
   return NextResponse.json({ ok: true });
 }

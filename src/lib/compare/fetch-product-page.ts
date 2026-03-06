@@ -47,6 +47,7 @@ export async function fetchProductPage(url: string): Promise<string> {
         'Mozilla/5.0 (compatible; IsItWorthIt/1.0; +https://isitworth.it)',
       Accept: 'text/html,application/xhtml+xml',
     },
+    redirect: 'error', // prevent redirect-based SSRF bypass
     signal: AbortSignal.timeout(10_000),
   });
 
