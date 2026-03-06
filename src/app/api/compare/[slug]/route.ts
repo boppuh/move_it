@@ -22,9 +22,10 @@ export async function GET(
   const PRODUCT_FIELDS = 'id, name, brand, price, sale_price, url, image_url, retailer_id, category, materials, style_tags, dimensions, rating, review_count';
 
   // Increment view count atomically (fire-and-forget)
-  void Promise.resolve(
-    supabase.rpc('increment_view_count', { comparison_id: comparison.id })
-  ).catch((err) => console.error('[view_count]', err));
+  void (async () => {
+    const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
+    if (rpcErr) console.error('[view_count]', rpcErr);
+  })();
 
   // Fetch source product and alternatives in parallel
   const altEntries: { id: string }[] = comparison.alternatives ?? [];

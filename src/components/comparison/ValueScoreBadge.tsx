@@ -9,7 +9,7 @@ interface ValueScoreBadgeProps {
 
 function scoreLabel(score: number): string {
   if (score >= 80) return 'Excellent Value';
-  if (score >= 60) return 'Good Value';
+  if (score >= 70) return 'Good Value';
   if (score >= 40) return 'Fair Value';
   if (score >= 20) return 'Overpriced';
   return 'Poor Value';

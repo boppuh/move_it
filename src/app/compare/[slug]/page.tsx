@@ -35,9 +35,10 @@ const getComparisonData = cache(async function getComparisonData(slug: string) {
   if (error || !comparison) return null;
 
   // Increment view count atomically (fire-and-forget)
-  void Promise.resolve(
-    supabase.rpc('increment_view_count', { comparison_id: comparison.id })
-  ).catch((err) => console.error('[view_count]', err));
+  void (async () => {
+    const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
+    if (rpcErr) console.error('[view_count]', rpcErr);
+  })();
 
   const [sourceResult, altResult] = await Promise.all([
     comparison.source_product
