@@ -2,64 +2,20 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase';
+import { fetchComparisonBySlug } from '@/lib/compare/fetch-comparison';
 import { formatPrice } from '@/lib/format';
 import { ValueScoreBadge } from '@/components/comparison/ValueScoreBadge';
 import { AlternativeCard } from '@/components/comparison/AlternativeCard';
 import { SpecTable } from '@/components/comparison/SpecTable';
 import { AnalysisSummary } from '@/components/comparison/AnalysisSummary';
 import { ShareButton } from '@/components/comparison/ShareButton';
-import type { Product, SimilarProduct, ValueAnalysis } from '@/lib/types';
+import type { SimilarProduct, ValueAnalysis } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Shape stored in comparisons.alternatives JSONB
-interface StoredAlternative {
-  id: string;
-  score: number | null;
-}
-
-const PRODUCT_FIELDS = 'id, name, brand, price, sale_price, url, image_url, retailer_id, category, materials, style_tags, dimensions, rating, review_count';
-
-const getComparisonData = cache(async function getComparisonData(slug: string) {
-  const supabase = createClient();
-
-  const { data: comparison, error } = await supabase
-    .from('comparisons')
-    .select('id, slug, source_product, alternatives, analysis, value_score, view_count, share_count, created_at')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !comparison) return null;
-
-  // Increment view count atomically (fire-and-forget)
-  void (async () => {
-    const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
-    if (rpcErr) console.error('[view_count]', rpcErr);
-  })();
-
-  const [sourceResult, altResult] = await Promise.all([
-    comparison.source_product
-      ? supabase.from('products').select(PRODUCT_FIELDS).eq('id', comparison.source_product).single()
-      : Promise.resolve({ data: null }),
-    (() => {
-      const altEntries: StoredAlternative[] = comparison.alternatives ?? [];
-      const ids = altEntries.map((a) => a.id).filter(Boolean);
-      return ids.length
-        ? supabase.from('products').select(PRODUCT_FIELDS).in('id', ids)
-        : Promise.resolve({ data: [] });
-    })(),
-  ]);
-
-  return {
-    comparison,
-    sourceProduct: sourceResult.data as Product | null,
-    altProducts: (altResult.data ?? []) as Product[],
-    altScores: (comparison.alternatives ?? []) as StoredAlternative[],
-  };
-});
+const getComparisonData = cache(fetchComparisonBySlug);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

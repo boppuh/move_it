@@ -18,11 +18,6 @@ export function ShareButton({ slug, title }: ShareButtonProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-
-      // Increment share count
-      await fetch(`/api/compare/${slug}/share`, { method: 'POST' }).catch(() => {});
     } catch {
       // Fallback: select and copy
       const el = document.createElement('input');
@@ -31,9 +26,12 @@ export function ShareButton({ slug, title }: ShareButtonProps) {
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    // Increment share count regardless of which copy path succeeded
+    fetch(`/api/compare/${slug}/share`, { method: 'POST' }).catch(() => {});
   };
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
