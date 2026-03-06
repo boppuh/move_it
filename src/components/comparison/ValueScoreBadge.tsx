@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { scoreColors } from '@/lib/score';
 
 interface ValueScoreBadgeProps {
   score: number;
@@ -15,12 +16,6 @@ function scoreLabel(score: number): string {
   return 'Poor Value';
 }
 
-function scoreColor(score: number): { stroke: string; text: string } {
-  if (score >= 70) return { stroke: '#16a34a', text: 'text-green-600 dark:text-green-400' };
-  if (score >= 40) return { stroke: '#ca8a04', text: 'text-yellow-600 dark:text-yellow-400' };
-  return { stroke: '#dc2626', text: 'text-red-500' };
-}
-
 export function ValueScoreBadge({ score, size = 'lg' }: ValueScoreBadgeProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
 
@@ -29,7 +24,7 @@ export function ValueScoreBadge({ score, size = 'lg' }: ValueScoreBadgeProps) {
   const radius = isLarge ? 48 : 26;
   const strokeWidth = isLarge ? 8 : 5;
   const circumference = useMemo(() => 2 * Math.PI * radius, [radius]);
-  const colors = useMemo(() => scoreColor(score), [score]);
+  const colors = useMemo(() => scoreColors(score), [score]);
 
   useEffect(() => {
     let frame: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ShareButtonProps {
   slug: string;
@@ -9,10 +9,11 @@ interface ShareButtonProps {
 
 export function ShareButton({ slug, title }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
+  const [url, setUrl] = useState(`/compare/${slug}`);
 
-  const url = typeof window !== 'undefined'
-    ? `${window.location.origin}/compare/${slug}`
-    : `/compare/${slug}`;
+  useEffect(() => {
+    setUrl(`${window.location.origin}/compare/${slug}`);
+  }, [slug]);
 
   const handleCopy = async () => {
     try {

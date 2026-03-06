@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
+import { scoreTextColor } from '@/lib/score';
 
 interface TrendingComparison {
   id: string;
@@ -42,12 +43,6 @@ async function getTrendingComparisons(): Promise<TrendingComparison[]> {
   });
 }
 
-function scoreColor(score: number | null): string {
-  if (score == null) return 'text-zinc-400';
-  if (score >= 70) return 'text-green-600 dark:text-green-400';
-  if (score >= 40) return 'text-yellow-600 dark:text-yellow-400';
-  return 'text-red-500 dark:text-red-400';
-}
 
 export async function TrendingComparisons() {
   const trending = await getTrendingComparisons();
@@ -71,7 +66,7 @@ export async function TrendingComparisons() {
               {item.source_product_name ?? item.slug}
             </span>
             {item.value_score != null && (
-              <span className={`ml-3 shrink-0 text-sm font-bold ${scoreColor(item.value_score)}`}>
+              <span className={`ml-3 shrink-0 text-sm font-bold ${scoreTextColor(item.value_score)}`}>
                 {item.value_score}
               </span>
             )}

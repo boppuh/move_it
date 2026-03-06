@@ -68,6 +68,10 @@ async function extractProductFromText(
     throw new Error('Could not identify product name from input');
   }
 
+  if (!parsed.category || typeof parsed.category !== 'string') {
+    throw new Error('Could not identify product category from input');
+  }
+
   // Set URL if we have it
   if (sourceUrl && !parsed.url) {
     parsed.url = sourceUrl;
