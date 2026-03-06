@@ -75,18 +75,29 @@ export async function runComparison(input: ComparisonInput): Promise<ComparisonR
     currency: 'USD',
   };
 
-  // Try upsert first, fall back to insert
+  // Try upsert on (external_id, retailer_id); fall back to plain insert for user-submitted URLs
   let sourceProduct: Product;
   const { data: upserted, error: upsertError } = await supabase
     .from('products')
-    .insert(insertData)
+    .upsert(insertData, { onConflict: 'external_id,retailer_id', ignoreDuplicates: false })
     .select()
     .single();
 
   if (upsertError) {
-    throw new Error(`Failed to save source product: ${upsertError.message}`);
+    // No external_id / unique conflict — just insert a new row
+    const { data: inserted, error: insertError } = await supabase
+      .from('products')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (insertError) {
+      throw new Error(`Failed to save source product: ${insertError.message}`);
+    }
+    sourceProduct = inserted as Product;
+  } else {
+    sourceProduct = upserted as Product;
   }
-  sourceProduct = upserted as Product;
 
   // Step 3: Find similar products
   const similarRaw = await findSimilarProducts(embedding, rawProduct.category, {

@@ -58,7 +58,9 @@ export function AlternativeCard({ product, sourcePrice, comparisonNote }: Altern
 
         <div className="flex items-baseline gap-2">
           <span className="text-base font-bold text-zinc-900 dark:text-zinc-50">
-            {formatPrice(product.price)}
+            {formatPrice(product.sale_price != null && product.sale_price < (product.price ?? Infinity)
+              ? product.sale_price
+              : product.price)}
           </span>
           {product.sale_price != null && product.sale_price < (product.price ?? Infinity) && (
             <span className="text-sm text-zinc-400 line-through">

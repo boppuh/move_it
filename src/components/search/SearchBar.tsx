@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { SearchLoading } from './SearchLoading';
 
 export function SearchBar() {
   const [input, setInput] = useState('');
@@ -55,6 +56,10 @@ export function SearchBar() {
 
   const loading = isLoading || isPending;
 
+  if (loading) {
+    return <SearchLoading />;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl">
       <div className="flex gap-2">
@@ -64,14 +69,13 @@ export function SearchBar() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Paste a product URL or describe a piece of furniture…"
           className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:ring-zinc-400"
-          disabled={loading}
         />
         <button
           type="submit"
-          disabled={loading || !input.trim()}
+          disabled={!input.trim()}
           className="rounded-xl bg-zinc-900 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-          {loading ? 'Analyzing…' : 'Compare'}
+          Compare
         </button>
       </div>
 

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -22,7 +23,7 @@ interface StoredAlternative {
 
 const PRODUCT_FIELDS = 'id, name, brand, price, sale_price, url, image_url, retailer_id, category, materials, style_tags, dimensions, rating, review_count';
 
-async function getComparisonData(slug: string) {
+const getComparisonData = cache(async function getComparisonData(slug: string) {
   const supabase = createClient();
 
   const { data: comparison, error } = await supabase
@@ -33,12 +34,9 @@ async function getComparisonData(slug: string) {
 
   if (error || !comparison) return null;
 
-  // Increment view count (fire-and-forget)
+  // Increment view count atomically (fire-and-forget)
   void Promise.resolve(
-    supabase
-      .from('comparisons')
-      .update({ view_count: (comparison.view_count ?? 0) + 1 })
-      .eq('id', comparison.id)
+    supabase.rpc('increment_view_count', { comparison_id: comparison.id })
   ).catch((err) => console.error('[view_count]', err));
 
   const [sourceResult, altResult] = await Promise.all([
@@ -60,7 +58,7 @@ async function getComparisonData(slug: string) {
     altProducts: (altResult.data ?? []) as Product[],
     altScores: (comparison.alternatives ?? []) as StoredAlternative[],
   };
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

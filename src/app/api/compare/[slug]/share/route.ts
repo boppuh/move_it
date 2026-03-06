@@ -10,7 +10,7 @@ export async function POST(
 
   const { data, error } = await supabase
     .from('comparisons')
-    .select('id, share_count')
+    .select('id')
     .eq('slug', slug)
     .single();
 
@@ -18,10 +18,7 @@ export async function POST(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  await supabase
-    .from('comparisons')
-    .update({ share_count: (data.share_count ?? 0) + 1 })
-    .eq('id', data.id);
+  await supabase.rpc('increment_share_count', { comparison_id: data.id });
 
   return NextResponse.json({ ok: true });
 }
