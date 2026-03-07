@@ -158,5 +158,5 @@ function generateSlug(name: string): string {
 
   // Append short random suffix to avoid collisions
   const suffix = Math.random().toString(36).slice(2, 7);
-  return `${base}-${suffix}`;
+  return `${base || 'product'}-${suffix}`;
 }
