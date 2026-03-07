@@ -64,15 +64,19 @@ export async function runComparison(input: ComparisonInput): Promise<ComparisonR
     brand: rawProduct.brand ?? null,
     price: rawProduct.price ?? null,
     sale_price: rawProduct.sale_price ?? null,
+    currency: rawProduct.currency ?? 'USD',
     url: rawProduct.url ?? input.url ?? null,
     image_url: rawProduct.image_url ?? null,
     description: rawProduct.description ?? null,
+    dimensions: rawProduct.dimensions ?? null,
     materials: rawProduct.materials ?? [],
     style_tags: rawProduct.style_tags ?? [],
-    dimensions: rawProduct.dimensions ?? null,
+    rating: rawProduct.rating ?? null,
+    review_count: rawProduct.review_count ?? null,
+    external_id: rawProduct.external_id ?? null,
+    retailer_id: rawProduct.retailer_id ?? null,
     embedding: `[${embedding.join(',')}]`,
     is_active: true,
-    currency: 'USD',
   };
 
   // Try upsert on (external_id, retailer_id); fall back to plain insert for user-submitted URLs
