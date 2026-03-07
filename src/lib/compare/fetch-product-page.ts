@@ -1,4 +1,22 @@
-const BLOCKED_HOSTNAMES = new Set(['localhost', '0.0.0.0', '::1']);
+/**
+ * Allowlist of retailer domains this server is permitted to fetch.
+ * An allowlist is the only reliable SSRF defense: hostname-pattern checks
+ * cannot prevent DNS rebinding (attacker controls DNS TTL) or
+ * IPv6-mapped IPv4 addresses (e.g. ::ffff:169.254.169.254).
+ */
+const ALLOWED_RETAILER_DOMAINS = new Set([
+  'wayfair.com',
+  'allmodern.com',
+  'westelm.com',
+  'article.com',
+  'crateandbarrel.com',
+  'cb2.com',
+  'potterybarn.com',
+  'ikea.com',
+  'zgallerie.com',
+  'anthropologie.com',
+  'cb2.com',
+]);
 
 function assertSafeUrl(raw: string): void {
   let parsed: URL;
@@ -12,25 +30,16 @@ function assertSafeUrl(raw: string): void {
     throw new Error('Only HTTP/HTTPS URLs are allowed');
   }
 
-  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, ''); // strip IPv6 brackets
+  const host = parsed.hostname.toLowerCase();
 
-  if (BLOCKED_HOSTNAMES.has(host)) {
-    throw new Error('Requests to internal addresses are not allowed');
-  }
+  // Allowlist check: host must be an approved retailer domain or subdomain.
+  // This prevents DNS rebinding and IPv6-mapped IPv4 bypasses.
+  const isAllowed = [...ALLOWED_RETAILER_DOMAINS].some(
+    (domain) => host === domain || host.endsWith(`.${domain}`)
+  );
 
-  // Block private/loopback IPv4 ranges
-  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (ipv4) {
-    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
-    if (
-      a === 127 ||                              // 127.x.x.x loopback
-      a === 10 ||                               // 10.x.x.x private
-      (a === 169 && b === 254) ||               // 169.254.x.x link-local / AWS metadata
-      (a === 172 && b >= 16 && b <= 31) ||      // 172.16–31.x.x private
-      (a === 192 && b === 168)                  // 192.168.x.x private
-    ) {
-      throw new Error('Requests to internal addresses are not allowed');
-    }
+  if (!isAllowed) {
+    throw new Error(`URL must be from a supported retailer. Supported: ${[...ALLOWED_RETAILER_DOMAINS].join(', ')}`);
   }
 }
 
