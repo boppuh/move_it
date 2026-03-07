@@ -57,15 +57,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
-  // Upsert to products table
+  // Upsert to products table — enumerate fields explicitly to prevent unknown
+  // GPT-returned properties from being forwarded to Supabase.
   const supabase = createClient();
   const insertData = {
-    ...rawProduct,
-    embedding: `[${embedding.join(',')}]`,
-    // Strip undefined so Supabase doesn't complain
+    name: rawProduct.name,
+    category: rawProduct.category,
+    brand: rawProduct.brand ?? null,
+    price: rawProduct.price ?? null,
+    sale_price: rawProduct.sale_price ?? null,
+    currency: rawProduct.currency ?? 'USD',
+    url: rawProduct.url ?? null,
+    image_url: rawProduct.image_url ?? null,
+    description: rawProduct.description ?? null,
     dimensions: rawProduct.dimensions ?? null,
     materials: rawProduct.materials ?? [],
     style_tags: rawProduct.style_tags ?? [],
+    rating: rawProduct.rating ?? null,
+    review_count: rawProduct.review_count ?? null,
+    external_id: rawProduct.external_id ?? null,
+    retailer_id: rawProduct.retailer_id ?? null,
+    embedding: `[${embedding.join(',')}]`,
     is_active: true,
   };
 
