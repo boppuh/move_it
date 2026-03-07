@@ -46,7 +46,7 @@ export async function fetchComparisonBySlug(slug: string, trackView = true): Pro
     void (async () => {
       const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
       if (rpcErr) console.error('[view_count]', rpcErr);
-    })();
+    })().catch((err) => console.error('[view_count]', err));
   }
 
   const altEntries: StoredAlternative[] = comparison.alternatives ?? [];
