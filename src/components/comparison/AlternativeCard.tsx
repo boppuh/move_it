@@ -14,9 +14,15 @@ function savingsPercent(sourcePrice: number, altPrice: number): number {
 }
 
 export function AlternativeCard({ product, sourcePrice, comparisonNote }: AlternativeCardProps) {
+  // Use the effective (displayed) price — sale_price when available, otherwise regular price
+  const effectivePrice =
+    product.sale_price != null && product.sale_price < (product.price ?? Infinity)
+      ? product.sale_price
+      : product.price;
+
   const savings =
-    sourcePrice != null && product.price != null && product.price < sourcePrice
-      ? savingsPercent(sourcePrice, product.price)
+    sourcePrice != null && effectivePrice != null && effectivePrice < sourcePrice
+      ? savingsPercent(sourcePrice, effectivePrice)
       : null;
 
   return (

@@ -15,7 +15,6 @@ const ALLOWED_RETAILER_DOMAINS = new Set([
   'ikea.com',
   'zgallerie.com',
   'anthropologie.com',
-  'cb2.com',
 ]);
 
 function assertSafeUrl(raw: string): void {
