@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase';
 import { identifyFromUrl, identifyFromText } from './identify';
 import { generateEmbedding } from '@/lib/ingest/embed';
+import { upsertProduct } from './upsert-product';
 import { findSimilarProducts } from './similarity';
 import { generateValueAnalysis } from './analyze';
 import type { Product, SimilarProduct } from '@/lib/types';
@@ -57,51 +58,8 @@ export async function runComparison(input: ComparisonInput): Promise<ComparisonR
 
   const embedding = await generateEmbedding(productForEmbed);
 
-  // Upsert to products table
-  const insertData = {
-    name: rawProduct.name,
-    category: rawProduct.category,
-    brand: rawProduct.brand ?? null,
-    price: rawProduct.price ?? null,
-    sale_price: rawProduct.sale_price ?? null,
-    currency: rawProduct.currency ?? 'USD',
-    url: rawProduct.url ?? input.url ?? null,
-    image_url: rawProduct.image_url ?? null,
-    description: rawProduct.description ?? null,
-    dimensions: rawProduct.dimensions ?? null,
-    materials: rawProduct.materials ?? [],
-    style_tags: rawProduct.style_tags ?? [],
-    rating: rawProduct.rating ?? null,
-    review_count: rawProduct.review_count ?? null,
-    external_id: rawProduct.external_id ?? null,
-    retailer_id: rawProduct.retailer_id ?? null,
-    embedding: `[${embedding.join(',')}]`,
-    is_active: true,
-  };
-
-  // Try upsert on (external_id, retailer_id); fall back to plain insert for user-submitted URLs
-  let sourceProduct: Product;
-  const { data: upserted, error: upsertError } = await supabase
-    .from('products')
-    .upsert(insertData, { onConflict: 'external_id,retailer_id', ignoreDuplicates: false })
-    .select()
-    .single();
-
-  if (upsertError) {
-    // No external_id / unique conflict — just insert a new row
-    const { data: inserted, error: insertError } = await supabase
-      .from('products')
-      .insert(insertData)
-      .select()
-      .single();
-
-    if (insertError) {
-      throw new Error(`Failed to save source product: ${insertError.message}`);
-    }
-    sourceProduct = inserted as Product;
-  } else {
-    sourceProduct = upserted as Product;
-  }
+  // Step 2b: Upsert source product (URL fallback ensures user-submitted URL is stored)
+  const sourceProduct = await upsertProduct(rawProduct, embedding, input.url);
 
   // Step 3: Find similar products
   const similarRaw = await findSimilarProducts(embedding, rawProduct.category, {
