@@ -107,46 +107,52 @@ export async function runComparison(input: ComparisonInput): Promise<ComparisonR
   );
 
   // Step 5: Persist comparison
-  const slug = generateSlug(sourceProduct.name);
-
   // Store alternatives as [{id, score}] JSONB to preserve real similarity scores
   const alternativesWithScores = alternatives.map((a) => ({
     id: a.id,
     score: a.similarity_score,
   }));
 
-  const { data: comparison, error: compareError } = await supabase
-    .from('comparisons')
-    .insert({
-      slug,
-      source_product: sourceProduct.id,
-      alternatives: alternativesWithScores,
-      analysis: analysis,
-      value_score: analysis.value_score,
-      view_count: 0,
-      share_count: 0,
-    })
-    .select()
-    .single();
+  // Retry up to 3 times on slug collision (unique constraint = code 23505)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const slug = generateSlug(sourceProduct.name);
+    const { data: comparison, error } = await supabase
+      .from('comparisons')
+      .insert({
+        slug,
+        source_product: sourceProduct.id,
+        alternatives: alternativesWithScores,
+        analysis: analysis,
+        value_score: analysis.value_score,
+        view_count: 0,
+        share_count: 0,
+      })
+      .select()
+      .single();
 
-  if (compareError) {
-    throw new Error(`Failed to save comparison: ${compareError.message}`);
+    if (!error) {
+      return {
+        id: comparison.id,
+        slug: comparison.slug,
+        source_product: sourceProduct,
+        alternatives,
+        value_score: analysis.value_score,
+        verdict: analysis.verdict,
+        strengths: analysis.strengths,
+        weaknesses: analysis.weaknesses,
+        comparison_notes: analysis.comparison_notes,
+        view_count: comparison.view_count,
+        share_count: comparison.share_count,
+        created_at: comparison.created_at,
+      };
+    }
+    if (error.code !== '23505' || attempt === 2) {
+      throw new Error(`Failed to save comparison: ${error.message}`);
+    }
   }
 
-  return {
-    id: comparison.id,
-    slug: comparison.slug,
-    source_product: sourceProduct,
-    alternatives,
-    value_score: analysis.value_score,
-    verdict: analysis.verdict,
-    strengths: analysis.strengths,
-    weaknesses: analysis.weaknesses,
-    comparison_notes: analysis.comparison_notes,
-    view_count: comparison.view_count,
-    share_count: comparison.share_count,
-    created_at: comparison.created_at,
-  };
+  // Unreachable — loop always returns or throws — satisfies TypeScript
+  throw new Error('Failed to save comparison after retries');
 }
 
 function generateSlug(name: string): string {
@@ -156,7 +162,7 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 50);
 
-  // Append short random suffix to avoid collisions
-  const suffix = Math.random().toString(36).slice(2, 7);
+  // Append short random suffix; padEnd guards against Math.random() === 0 (empty slice)
+  const suffix = Math.random().toString(36).slice(2, 7).padEnd(5, '0');
   return `${base || 'product'}-${suffix}`;
 }
