@@ -82,9 +82,11 @@ export default async function ComparisonPage({ params }: PageProps) {
 
       {/* Header */}
       <section className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
-        <div className="shrink-0">
-          <ValueScoreBadge score={comparison.value_score ?? 50} size="lg" />
-        </div>
+        {comparison.value_score != null && (
+          <div className="shrink-0">
+            <ValueScoreBadge score={comparison.value_score} size="lg" />
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <div>
