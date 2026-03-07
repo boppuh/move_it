@@ -66,7 +66,7 @@ export function AlternativeCard({ product, sourcePrice, comparisonNote }: Altern
           <span className="text-base font-bold text-zinc-900 dark:text-zinc-50">
             {formatPrice(effectivePrice)}
           </span>
-          {effectivePrice !== product.price && (
+          {product.price != null && effectivePrice !== product.price && (
             <span className="text-sm text-zinc-400 line-through">
               {formatPrice(product.price)}
             </span>
