@@ -50,7 +50,7 @@ export const ComparisonSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(1),
   source_product: z.string().uuid().nullable().optional(),
-  alternatives: z.array(z.string().uuid()).default([]),
+  alternatives: z.array(z.object({ id: z.string().uuid(), score: z.number().nullable() })).default([]),
   analysis: z.record(z.string(), z.unknown()).nullable().optional(),
   value_score: z.number().int().min(1).max(100).nullable().optional(),
   view_count: z.number().int().min(0).default(0),
