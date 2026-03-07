@@ -27,10 +27,10 @@ export interface ComparisonData {
 }
 
 /**
- * Fetches a comparison by slug, increments view count atomically, and
- * returns the comparison row together with the source and alternative products.
+ * Fetches a comparison by slug and returns it with source and alternative products.
+ * Pass trackView=false for programmatic/API callers that should not inflate view counts.
  */
-export async function fetchComparisonBySlug(slug: string): Promise<ComparisonData | null> {
+export async function fetchComparisonBySlug(slug: string, trackView = true): Promise<ComparisonData | null> {
   const supabase = createClient();
 
   const { data: comparison, error } = await supabase
@@ -41,11 +41,13 @@ export async function fetchComparisonBySlug(slug: string): Promise<ComparisonDat
 
   if (error || !comparison) return null;
 
-  // Increment view count atomically (fire-and-forget)
-  void (async () => {
-    const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
-    if (rpcErr) console.error('[view_count]', rpcErr);
-  })();
+  // Increment view count atomically (fire-and-forget) — only for real page visits
+  if (trackView) {
+    void (async () => {
+      const { error: rpcErr } = await supabase.rpc('increment_view_count', { comparison_id: comparison.id });
+      if (rpcErr) console.error('[view_count]', rpcErr);
+    })();
+  }
 
   const altEntries: StoredAlternative[] = comparison.alternatives ?? [];
   const altIds = altEntries.map((a) => a.id).filter(Boolean);
