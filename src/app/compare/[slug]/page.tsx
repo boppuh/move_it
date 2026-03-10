@@ -1,3 +1,5 @@
+export const revalidate = 3600;
+
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -9,6 +11,7 @@ import { AlternativeCard } from '@/components/comparison/AlternativeCard';
 import { SpecTable } from '@/components/comparison/SpecTable';
 import { AnalysisSummary } from '@/components/comparison/AnalysisSummary';
 import { ShareButton } from '@/components/comparison/ShareButton';
+import { AffiliateDisclosure } from '@/components/ui/AffiliateDisclosure';
 import type { SimilarProduct, ValueAnalysis } from '@/lib/types';
 
 interface PageProps {
@@ -70,7 +73,45 @@ export default async function ComparisonPage({ params }: PageProps) {
     } as SimilarProduct & { name: string; brand: string | null; category: string }))
     .sort((a, b) => b.similarity_score - a.similarity_score);
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: sourceProduct.name,
+    ...(sourceProduct.brand ? { brand: { '@type': 'Brand', name: sourceProduct.brand } } : {}),
+    ...(sourceProduct.url ? { url: sourceProduct.url } : {}),
+    ...(sourceProduct.image_url ? { image: sourceProduct.image_url } : {}),
+    ...(comparison.value_score != null
+      ? {
+          review: {
+            '@type': 'Review',
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: comparison.value_score,
+              bestRating: 100,
+              worstRating: 1,
+            },
+            author: { '@type': 'Organization', name: 'Is It Worth It?' },
+            reviewBody: analysis?.verdict,
+          },
+        }
+      : {}),
+    offers: sourceProduct.price != null
+      ? {
+          '@type': 'Offer',
+          price: sourceProduct.price,
+          priceCurrency: 'USD',
+          url: `${baseUrl}/compare/${slug}`,
+        }
+      : undefined,
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <main className="mx-auto flex max-w-4xl flex-col gap-10 px-4 py-12">
       {/* Back */}
       <Link
@@ -149,6 +190,7 @@ export default async function ComparisonPage({ params }: PageProps) {
                 product={alt}
                 sourcePrice={sourceProduct.price ?? null}
                 comparisonNote={analysis?.comparison_notes?.[alt.id]}
+                comparisonId={comparison.id}
               />
             ))}
           </div>
@@ -167,6 +209,10 @@ export default async function ComparisonPage({ params }: PageProps) {
         </section>
       )}
 
+      {alternatives.length > 0 && (
+        <AffiliateDisclosure />
+      )}
+
       {alternatives.length === 0 && (
         <div className="rounded-2xl border border-zinc-100 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
           <p className="text-zinc-500 dark:text-zinc-400">
@@ -175,5 +221,6 @@ export default async function ComparisonPage({ params }: PageProps) {
         </div>
       )}
     </main>
+    </>
   );
 }
