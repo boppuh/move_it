@@ -85,7 +85,7 @@ export function AlternativeCard({ product, sourcePrice, comparisonNote, comparis
             {Math.round(product.similarity_score * 100)}% similar
           </span>
 
-          {product.id && (
+          {product.id && product.url && (
             <AffiliateButton
               productId={product.id}
               comparisonId={comparisonId}

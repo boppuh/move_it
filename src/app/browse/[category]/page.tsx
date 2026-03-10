@@ -1,3 +1,5 @@
+export const revalidate = 3600;
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -61,7 +63,7 @@ export default async function CategoryPage({ params }: PageProps) {
     itemListElement: items.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/product/${p.id}`,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/product/${p.id}`,
       name: p.name,
     })),
   };

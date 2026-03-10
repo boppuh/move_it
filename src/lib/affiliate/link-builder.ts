@@ -25,7 +25,7 @@ export function buildAffiliateUrl(product: Product, retailer: Retailer): string 
   const network = retailer.affiliate_network;
 
   if (network === 'cj' && CJ_PUBLISHER_ID) {
-    return `https://www.anrdoezrs.net/links/${CJ_PUBLISHER_ID}/type/dlg/${productUrl}`;
+    return `https://www.anrdoezrs.net/links/${CJ_PUBLISHER_ID}/type/dlg/${encodeURIComponent(productUrl)}`;
   }
 
   if (network === 'shareasale' && SHAREASALE_AFFILIATE_ID) {

@@ -73,7 +73,7 @@ export default async function ComparisonPage({ params }: PageProps) {
     } as SimilarProduct & { name: string; brand: string | null; category: string }))
     .sort((a, b) => b.similarity_score - a.similarity_score);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',

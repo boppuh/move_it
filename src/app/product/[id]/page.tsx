@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,14 +12,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+const getProduct = cache(async (id: string) => {
+  const supabase = createClient();
+  return supabase.from('products').select('*, retailers(*)').eq('id', id).single();
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const supabase = createClient();
-  const { data } = await supabase
-    .from('products')
-    .select('name, price, brand')
-    .eq('id', id)
-    .single();
+  const { data } = await getProduct(id);
 
   if (!data) return { title: 'Product Not Found' };
 
@@ -31,13 +32,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = createClient();
 
-  const { data: product, error } = await supabase
-    .from('products')
-    .select('*, retailers(*)')
-    .eq('id', id)
-    .single();
+  const { data: product, error } = await getProduct(id);
 
   if (error || !product) notFound();
 

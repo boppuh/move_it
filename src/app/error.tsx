@@ -1,8 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <main className="mx-auto flex max-w-xl flex-col items-center gap-6 px-4 py-24 text-center">
       <p className="text-6xl font-bold text-zinc-200 dark:text-zinc-700">500</p>
