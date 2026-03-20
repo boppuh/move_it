@@ -1,19 +1,20 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import type { SimilarProduct } from '@/lib/types';
 import { formatPrice } from '@/lib/format';
+import { AffiliateButton } from '@/components/product/AffiliateButton';
 
 interface AlternativeCardProps {
   product: SimilarProduct & { name: string; brand: string | null };
   sourcePrice: number | null;
   comparisonNote?: string;
+  comparisonId?: string;
 }
 
 function savingsPercent(sourcePrice: number, altPrice: number): number {
   return Math.round(((sourcePrice - altPrice) / sourcePrice) * 100);
 }
 
-export function AlternativeCard({ product, sourcePrice, comparisonNote }: AlternativeCardProps) {
+export function AlternativeCard({ product, sourcePrice, comparisonNote, comparisonId }: AlternativeCardProps) {
   // Use the effective (displayed) price — sale_price when available, otherwise regular price
   const effectivePrice =
     product.sale_price != null && product.sale_price < (product.price ?? Infinity)
@@ -84,15 +85,12 @@ export function AlternativeCard({ product, sourcePrice, comparisonNote }: Altern
             {Math.round(product.similarity_score * 100)}% similar
           </span>
 
-          {product.url && (
-            <Link
-              href={product.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              View →
-            </Link>
+          {product.id && product.url && (
+            <AffiliateButton
+              productId={product.id}
+              comparisonId={comparisonId}
+              variant="compact"
+            />
           )}
         </div>
       </div>
